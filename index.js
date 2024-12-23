@@ -32,6 +32,14 @@ async function run() {
    
     const postCollection = client.db('Serve-together').collection('volunteer-posts');
 
+
+    app.get('/posts/email/:email', async(req , res) =>{
+      const email = req.params.email;
+      const query = {organizerEmail : email }
+      const result = await postCollection.find(query).toArray();
+      res.send(result);
+    } )
+    
     app.get('/posts/:id', async (req, res)=>{
       const id = req.params.id;
       const query ={_id: new ObjectId(id)}
@@ -52,7 +60,12 @@ async function run() {
     })
 
 
-
+   app.delete('/posts/:id', async(req,res) =>{
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)}
+    const result = await postCollection.deleteOne(query);
+    res.send(result);
+   })
 
 
     // Send a ping to confirm a successful connection
