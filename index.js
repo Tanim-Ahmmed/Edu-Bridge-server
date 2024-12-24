@@ -48,11 +48,18 @@ async function run() {
     })
 
     app.get('/posts', async(req,res)=>{
-      const cursor = postCollection.find();
+      const {searchParams} = req.query;
+      let option = {};
+
+      if (searchParams){
+        option = {postTitle:{$regex: searchParams, $options: "i" } };
+      }
+     
+      const cursor = postCollection.find(option);
       const result = await cursor.toArray();
       res.send(result);
     } )
-
+        
     app.post('/posts', async(req, res)=>{
       const newPost = req.body;
       const result = await postCollection.insertOne(newPost);
