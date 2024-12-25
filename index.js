@@ -32,6 +32,7 @@ async function run() {
    
     const postCollection = client.db('Serve-together').collection('volunteer-posts');
 
+    const volunteerRequestCollection = client.db('Serve-together').collection('volunteer-request');
 
     app.get('/posts/email/:email', async(req , res) =>{
       const email = req.params.email;
@@ -62,10 +63,13 @@ async function run() {
         
     app.post('/posts', async(req, res)=>{
       const newPost = req.body;
+      
+      // i conver the volunteerNeedCount string to number here
+      newPost.volunteersNeeded = parseInt(newPost.volunteersNeeded, 10)
       const result = await postCollection.insertOne(newPost);
       res.send(result);
     })
-
+ 
     app.put('/posts/:id', async(req, res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
@@ -80,7 +84,7 @@ async function run() {
           location: updatePost.location, 
           category: updatePost.category, 
           description: updatePost.description, 
-          volunteersNeeded: updatePost.volunteersNeeded, 
+          volunteersNeeded: parseInt(updatePost.volunteersNeeded, 10),
           deadline: updatePost.deadline       
           }
       }
@@ -95,6 +99,30 @@ async function run() {
     const result = await postCollection.deleteOne(query);
     res.send(result);
    })
+
+
+ // volunteer request api
+
+ app.get("/post-volunteer-request", async (req, res) =>{
+  const email = req.query.email;
+  const query = {volunteerEmail: email}
+  const result = await volunteerRequestCollection.find(query).toArray();
+  res.send(result);
+ })
+ 
+ app.post("/post-volunteer-request", async (req, res) =>{
+       const volunteerRequest = req.body;
+       const result = await volunteerRequestCollection.insertOne(volunteerRequest);
+
+       const filter = {_id: new ObjectId(volunteerRequest.postId)}
+       const update ={
+         $inc: {volunteersNeeded: -1},
+       }
+       const updateVolunteer = await postCollection.updateOne(filter, update)
+       res.send(result);
+ } )
+ 
+
 
 
     // Send a ping to confirm a successful connection
