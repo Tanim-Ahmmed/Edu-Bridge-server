@@ -3,9 +3,15 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+const corsOptions = {
+  origin: ["http://localhost:5173"],
+  credentials: true, optionsSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgufh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -31,6 +37,40 @@ async function run() {
     const volunteerRequestCollection = client
       .db("Serve-together")
       .collection("volunteer-request");
+
+
+
+
+      //jwt
+      app.post("/jwt", async (req, res) =>{
+       const email = req.body
+       const token =  jwt.sign(email, process.env.SECRER_KEY,{expiresIn:'30d',
+
+       })
+       console.log(token)
+       res.cookie("token", token,{
+        httpOnly:true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+       }).send("cookie success")
+      })
+
+
+
+      //jwt logout
+       app.get("/logout", async (req, res) =>{
+        res.clearCookie("token",{
+         maxAge: 0,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        }).send({success: true})
+       })
+
+
+
+
+
+
 
     app.get("/posts/email/:email", async (req, res) => {
       const email = req.params.email;
@@ -62,7 +102,6 @@ async function run() {
     app.post("/posts", async (req, res) => {
       const newPost = req.body;
 
-      // i conver the volunteerNeedCount string to number here
       newPost.volunteersNeeded = parseInt(newPost.volunteersNeeded, 10);
       const result = await postCollection.insertOne(newPost);
       res.send(result);
