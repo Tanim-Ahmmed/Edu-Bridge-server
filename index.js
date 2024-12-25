@@ -107,10 +107,26 @@ async function run() {
   const email = req.query.email;
   const query = {volunteerEmail: email}
   const result = await volunteerRequestCollection.find(query).toArray();
+
+  for(const volunteerRequest of result ){
+    const query1 = {_id: new ObjectId(volunteerRequest.postId)}
+    const myPost = await postCollection.findOne(query1);
+    if(myPost){
+      volunteerRequest.postTitle = myPost.postTitle;
+      volunteerRequest.deadline  = myPost.deadline;
+      volunteerRequest.category  = myPost.category;
+      volunteerRequest.thumbnail  = myPost.thumbnail;
+      volunteerRequest.location  = myPost.location;
+
+    }
+  }
+
   res.send(result);
  })
  
+
  app.post("/post-volunteer-request", async (req, res) =>{
+      
        const volunteerRequest = req.body;
        const result = await volunteerRequestCollection.insertOne(volunteerRequest);
 
@@ -122,6 +138,7 @@ async function run() {
        res.send(result);
  } )
  
+
 
 
 
