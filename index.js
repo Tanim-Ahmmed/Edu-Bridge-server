@@ -7,7 +7,10 @@ const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173",
+    "https://assignment-11-5bae2.web.app",
+    "https://assignment-11-5bae2.firebaseapp.com"
+  ],
   credentials: true, optionsSuccessStatus: 200,
 }
 
@@ -136,6 +139,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/post/upcoming', async (req, res) =>{
+      const result = await  postCollection.find().sort({deadline: 1}).limit(6).toArray();
+      res.send(result);
+    })
+  
     // volunteer request api
 
     app.get("/post-volunteer-request", async (req, res) => {
@@ -158,6 +166,8 @@ async function run() {
       res.send(result);
     });
 
+
+   
     app.post("/post-volunteer-request", async (req, res) => {
       const volunteerRequest = req.body;
       const result = await volunteerRequestCollection.insertOne(
@@ -178,7 +188,7 @@ async function run() {
       const result = await volunteerRequestCollection.deleteOne(query);
       res.send(result);
     });
-
+ 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
